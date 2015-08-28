@@ -9,6 +9,7 @@ function Krolobot(level) {
     var ledges;
     var stars;
     var rabbit;
+    var setupRequest = true;
 
     function preload() {
         game.load.image('star', 'assets/berry.png');
@@ -19,14 +20,21 @@ function Krolobot(level) {
     function create() {
         ledges = game.add.group();
         stars = game.add.group();
+    }
+
+    function update() {
+        if (setupRequest) {
+            setupElements();
+            setupRequest = false;
+        }
+    }
+    
+    function setupElements() {
         placeLedges(ledges, level.ledges);
         placeStars(stars, level.stars);
         rabbit = placeRabbit(level.rabbit);
     }
 
-    function update() {
-    }
-    
     function placeLedges(group, data) {
         for (var i = 0; i < data.length; i++) {
             var ledge = data[i];
