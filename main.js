@@ -3,12 +3,15 @@ function Krolobot(level) {
     var sz = 20;
     var width = 30;
     var height = 13;
+    var stepTime = 1000;
     
     var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, '',
         { preload: preload, create: create, update: update });
     var objects;
     var objGroup;
     var moving = [];
+    var movingInProgress = false;
+    var dir = 1;
     var setupRequest = true;
 
     function preload() {
@@ -31,7 +34,10 @@ function Krolobot(level) {
         for (var i = moving.length - 1; i >= 0; i--) {
             var finished = processMove(moving[i], t);
             if (finished) {
-                moving.splice(i, 1);
+                if (moving[i].obj.key == 'rabbit') {
+                    movingInProgress = false;
+                }
+                var obj = moving.splice(i, 1);
             }
         }
     }
@@ -119,6 +125,28 @@ function Krolobot(level) {
         });
         what.logicX += dx;
         what.logicY += dy;
+    }
+    
+    function getRabbit() {
+        return objects['rabbit'][0];
+    }
+    
+    this.turn = function() {
+        if (movingInProgress) {
+            return false;
+        }
+        dir = -dir;
+        getRabbit().frame = (1 - dir) / 2;
+        return true;
+    }
+    
+    this.forward = function() {
+        if (movingInProgress) {
+            return false;
+        }
+        movingInProgress = true;
+        this.addMoving(getRabbit(), dir, 0, stepTime);
+        return true;
     }
 }
 
