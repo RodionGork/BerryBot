@@ -32,12 +32,13 @@ function Krolobot(level) {
         }
         var t = game.time.now;
         for (var i = moving.length - 1; i >= 0; i--) {
-            var finished = processMove(moving[i], t);
+            var move = moving[i];
+            var finished = processMove(move, t);
             if (finished) {
-                if (moving[i].obj.key == 'rabbit') {
+                moving.splice(i, 1);
+                if (move.obj.key == 'rabbit') {
                     movingInProgress = false;
                 }
-                var obj = moving.splice(i, 1);
             }
         }
     }
@@ -83,6 +84,10 @@ function Krolobot(level) {
         if (move.end <= t) {
             move.obj.x = move.x1;
             move.obj.y = move.y1;
+            if (move.next) {
+                nextMoving(move);
+                return false;
+            }
             return true;
         }
         var frac = (t - move.start) / (move.end - move.start);
@@ -111,20 +116,33 @@ function Krolobot(level) {
         console.log('removing');
     }
     
-    this.addMoving = function(what, dx, dy, dt) {
+    this.createMoving = function(what, data) {
+        var rec = {obj: what, next: data};
+        nextMoving(rec);
+        moving.push(rec);
+    }
+    
+    function nextMoving(rec) {
+        if (typeof(rec.next) != 'object') {
+            return false;
+        }
+        var data = rec.next;
+        var dx = data[0];
+        var dy = data[1];
+        var dt = data[2];
+        var next = (typeof(data[3]) == 'object') ? data[3] : null;
         var ts = game.time.now;
-        moving.push({
-            obj: what,
-            start: ts,
-            end: ts + dt,
-            x0: what.x,
-            y0: what.y,
-            x1: mkX(what.logicX + dx),
-            y1: mkY(what.logicY + dy),
-            logicX: what
-        });
+        var what = rec.obj;
+        rec.start = ts;
+        rec.end = ts + dt;
+        rec.x0 = what.x;
+        rec.y0 = what.y;
+        rec.x1 = mkX(what.logicX + dx);
+        rec.y1 = mkY(what.logicY + dy);
+        rec.next = next;
         what.logicX += dx;
         what.logicY += dy;
+        return true;
     }
     
     function getRabbit() {
@@ -144,9 +162,32 @@ function Krolobot(level) {
         if (movingInProgress) {
             return false;
         }
+        var rabbit = getRabbit();
+        var top = topOfColumn(rabbit.logicX + dir, rabbit.logicY);
+        if (top[0] == rabbit.logicY) {
+            return false;
+        }
+        if (top[0] == rabbit.logicY - 1) {
+            next = null;
+        } else {
+            var delta = rabbit.logicY - 1 - top[0];
+            next = [0, -delta, delta * stepTime];
+        }
         movingInProgress = true;
-        this.addMoving(getRabbit(), dir, 0, stepTime);
+        this.createMoving(getRabbit(), [dir, 0, stepTime, next]);
         return true;
+    }
+    
+    function topOfColumn(x, maxY) {
+        var gnd = objects['ground'];
+        var res = [];
+        for (var i in gnd) {
+            var g = gnd[i];
+            if (g.logicX == x && g.logicY <= maxY) {
+                res.push(g.logicY);
+            }
+        }
+        return res.sort(function(a, b) {return b - a});
     }
 }
 
@@ -155,12 +196,18 @@ var level = {
     height: 13,
     ledges: [
         {x: 0, y: 0, len: 30},
-        {x: 15, y: 7, len: 10},
+        {x: 10, y: 7, len: 10},
+        {x: 19, y: 3, len: 3},
+        {x: 9, y: 5, len: 1},
+        {x: 8, y: 3, len: 1},
+        {x: 7, y: 2, len: 2}
     ],
     stars: [
-        {x: 23, y: 8},
+        {x: 18, y: 8},
+        {x: 19, y: 4},
+        {x: 7, y: 3}
     ],
-    rabbit: {x: 16, y: 8},
+    rabbit: {x: 11, y: 8},
 };
 
 
