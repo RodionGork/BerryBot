@@ -11,8 +11,16 @@
         }
     </style>
 </head>
-<body>
-    <h1 class="centered">Krolobot v1.0</h1>
+<body class="centered">
+    <h1>Krolobot :)</h1>
+    <div id="gamescreen"></div>
+    <br/>
+    <div>
+        <button onclick="krolobot.forward()">Move</button>
+        <button onclick="krolobot.turn()">Turn</button>
+        <button onclick="krolobot.jump()">Jump</button>
+        <button onclick="krolobot.eat()">Eat</button>
+    </div>
     <script src="./phaser.min.js"></script>
     <script src="./main.js"></script>
 </body>

@@ -5,7 +5,7 @@ function Krolobot(level) {
     var height = 13;
     var stepTime = 1000;
     
-    var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, '',
+    var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, 'gamescreen',
         { preload: preload, create: create, update: update });
     var objects;
     var objGroup;
@@ -63,8 +63,9 @@ function Krolobot(level) {
     function placeLedges(data) {
         for (var i = 0; i < data.length; i++) {
             var ledge = data[i];
-            for (var j = 0; j < ledge.len; j++) {
-                addObject(ledge.x + j, ledge.y, 'ground');
+            var delta = ledge.len > 0 ? [1, 0] : [0, 1];
+            for (var j = Math.abs(ledge.len) - 1; j >= 0; j--) {
+                addObject(ledge.x + j * delta[0], ledge.y + j * delta[1], 'ground');
             }
         }
     }
@@ -169,12 +170,14 @@ function Krolobot(level) {
         }
         if (top[0] == rabbit.logicY - 1) {
             next = null;
+            divisor = 1;
         } else {
             var delta = rabbit.logicY - 1 - top[0];
-            next = [0, -delta, delta * stepTime];
+            next = [dir / 2, -delta, delta * stepTime];
+            divisor = 2;
         }
         movingInProgress = true;
-        this.createMoving(getRabbit(), [dir, 0, stepTime, next]);
+        this.createMoving(getRabbit(), [dir / divisor, 0, stepTime / divisor , next]);
         return true;
     }
     
@@ -200,7 +203,10 @@ var level = {
         {x: 19, y: 3, len: 3},
         {x: 9, y: 5, len: 1},
         {x: 8, y: 3, len: 1},
-        {x: 7, y: 2, len: 2}
+        {x: 7, y: 2, len: 4},
+        {x: 6, y: 2, len: -2},
+        {x: 0, y: 1, len: -3},
+        {x: 29, y: 1, len: -3}
     ],
     stars: [
         {x: 18, y: 8},
