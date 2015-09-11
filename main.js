@@ -3,7 +3,7 @@ function Krolobot(level) {
     var sz = 20;
     var width = 30;
     var height = 13;
-    var stepTime = 1000;
+    var stepTime = 350;
     
     var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, 'gamescreen',
         { preload: preload, create: create, update: update });
@@ -177,8 +177,58 @@ function Krolobot(level) {
             divisor = 2;
         }
         movingInProgress = true;
-        this.createMoving(getRabbit(), [dir / divisor, 0, stepTime / divisor , next]);
+        this.createMoving(rabbit, [dir / divisor, 0, stepTime / divisor , next]);
         return true;
+    }
+    
+    this.jump = function() {
+        if (movingInProgress) {
+            return false;
+        }
+        var rabbit = getRabbit();
+        var goal = null;
+        var top1 = topOfColumn(rabbit.logicX + dir, rabbit.logicY + 2);
+        var stk1 = topOfColumnAsStack(top1, rabbit.logicY + 2, 3);
+        if (stk1[0] == 1 && stk1[1] == 1) {
+            return false;
+        }
+        var top0 = topOfColumn(rabbit.logicX, rabbit.logicY + 2);
+        var stk0 = topOfColumnAsStack(top0, rabbit.logicY + 2, 2);
+        if (stk1[1] == 1) {
+            if (stk0[0] == 1 || stk0[1] == 1) {
+                return false;
+            }
+            goal = [dir, +2, 2 * stepTime, null];
+        } else if (stk1[2] == 1) {
+            if (stk0[1] == 1) {
+                return false;
+            }
+            goal = [dir, +1, stepTime, null];
+        } else {
+            var top2 = topOfColumn(rabbit.logicX + dir * 2, rabbit.logicY);
+            if (top2[0] == rabbit.logicY) {
+                return false;
+            }
+            var dy = rabbit.logicY - top2[0];
+            goal = [dir, +1, stepTime, [dir, -dy, dy * stepTime, null]];
+        }
+        movingInProgress = true;
+        this.createMoving(rabbit, goal);
+        return true;
+    }
+    
+    function topOfColumnAsStack(top, topY, len) {
+        var res = [];
+        for (var i = 0; i < len; i++) {
+            res[i] = 0;
+        }
+        for (var j in top) {
+            var d = topY - top[j];
+            if (d < len) {
+                res[d] = 1;
+            }
+        }
+        return res;
     }
     
     function topOfColumn(x, maxY) {
@@ -216,6 +266,29 @@ var level = {
     rabbit: {x: 11, y: 8},
 };
 
+/*
+#
+@   - no
+###
+
+--
+@#  +1,1
+###
+
+--
+-#
+@   +1,2
+###
+
+--
+@-- +1,1 +1,-1
+###
+
+--
+@-- +1,1 +1,-n
+##-
+###
+*/
 
 var krolobot = new Krolobot(level);
 
