@@ -9,9 +9,9 @@ function Krolobot(level) {
         { preload: preload, create: create, update: update });
     var objects;
     var objGroup;
-    var moving = [];
-    var movingInProgress = false;
-    var dir = 1;
+    var moving;
+    var movingInProgress;
+    var dir;
     var setupRequest = true;
 
     function preload() {
@@ -41,12 +41,22 @@ function Krolobot(level) {
                 }
             }
         }
+        objects['score'].setText('Berries: ' + objects['star'].filter(function(s){return s.alive}).length);
     }
-    
+
+    function reinitState() {
+        moving = [];
+        movingInProgress = false;
+        dir = 1;
+        setupRequest = true;
+    }
+
     function setupElements() {
+        reinitState();
         placeLedges(level.ledges);
         placeStars(level.stars);
         placeRabbit(level.rabbit);
+        placeScore();
     }
     
     function addObject(x, y, kind) {
@@ -79,6 +89,12 @@ function Krolobot(level) {
     
     function placeRabbit(data) {
         addObject(data.x, data.y, 'rabbit');
+        getRabbit().initX = data.x;
+        getRabbit().initY = data.y;
+    }
+
+    function placeScore() {
+        objects['score'] = game.add.text(0, 0, '', { font: "15px Arial", fill: "#ff0"});
     }
     
     function processMove(move, t) {
@@ -113,8 +129,25 @@ function Krolobot(level) {
         return objects;
     }
     
-    this.removeAll = function() {
-        console.log('removing');
+    function removeAll() {
+        for (var k in objects) {
+            var set = objects[k];
+            for (var i in set) {
+                set[i].destroy();
+            }
+        }
+    }
+
+    this.reset = function() {
+        objects['star'].forEach(function(star) {
+            star.reset(star.x, star.y);
+        });
+        var rabbit = getRabbit();
+        rabbit.reset(mkX(rabbit.initX), mkY(rabbit.initY));
+        rabbit.logicX = rabbit.initX;
+        rabbit.logicY = rabbit.initY;
+        movingInProgress = false;
+        moving = [];
     }
     
     this.createMoving = function(what, data) {
@@ -217,6 +250,22 @@ function Krolobot(level) {
         return true;
     }
     
+    this.eat = function() {
+        if (movingInProgress) {
+            return false;
+        }
+        var rabbit = getRabbit();
+        var stars = objects['star'];
+        for (var i in stars) {
+            var star = stars[i];
+            if (star.logicX == rabbit.logicX && star.logicY == rabbit.logicY) {
+                star.kill();
+                return true;
+            }
+        }
+        return false;
+    }
+
     function topOfColumnAsStack(top, topY, len) {
         var res = [];
         for (var i = 0; i < len; i++) {
