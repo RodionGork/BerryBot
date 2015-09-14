@@ -1,12 +1,14 @@
-function Krolobot(level) {
+function Krolobot(data) {
     
     var sz = 20;
     var width = 30;
     var height = 13;
     var stepTime = 350;
     
+    var level = data;
+    
     var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, 'gamescreen',
-        { preload: preload, create: create, update: update });
+        { preload: preload, update: update });
     var objects;
     var objGroup;
     var moving;
@@ -18,11 +20,6 @@ function Krolobot(level) {
         game.load.image('star', 'assets/berry.png');
         game.load.image('ground', 'assets/ground.png');
         game.load.spritesheet('rabbit', 'assets/bot.png', 40, 40);
-    }
-
-    function create() {
-        objGroup = game.add.group();
-        objects = {};
     }
 
     function update() {
@@ -52,11 +49,34 @@ function Krolobot(level) {
     }
 
     function setupElements() {
+        objGroup = game.add.group();
+        objects = [];
         reinitState();
         placeLedges(level.ledges);
         placeStars(level.stars);
         placeRabbit(level.rabbit);
         placeScore();
+    }
+    
+    this.reset = function() {
+        for (var key in objects) {
+            var obj = objects[key];
+            if (obj instanceof Array) {
+                for (var i in obj) {
+                    obj[i].destroy();
+                }
+            } else {
+                obj.destroy();
+            }
+        }
+        objects = [];
+        objGroup.destroy();
+        setupRequest = true;
+    }
+    
+    this.loadLevel = function(data) {
+        level = data;
+        this.reset();
     }
     
     function addObject(x, y, kind) {
@@ -127,27 +147,6 @@ function Krolobot(level) {
     
     this.getObjects = function() {
         return objects;
-    }
-    
-    function removeAll() {
-        for (var k in objects) {
-            var set = objects[k];
-            for (var i in set) {
-                set[i].destroy();
-            }
-        }
-    }
-
-    this.reset = function() {
-        objects['star'].forEach(function(star) {
-            star.reset(star.x, star.y);
-        });
-        var rabbit = getRabbit();
-        rabbit.reset(mkX(rabbit.initX), mkY(rabbit.initY));
-        rabbit.logicX = rabbit.initX;
-        rabbit.logicY = rabbit.initY;
-        movingInProgress = false;
-        moving = [];
     }
     
     this.createMoving = function(what, data) {
@@ -293,51 +292,4 @@ function Krolobot(level) {
     }
 }
 
-var level = {
-    width: 30,
-    height: 13,
-    ledges: [
-        {x: 0, y: 0, len: 30},
-        {x: 10, y: 7, len: 10},
-        {x: 19, y: 3, len: 3},
-        {x: 9, y: 5, len: 1},
-        {x: 8, y: 3, len: 1},
-        {x: 7, y: 2, len: 4},
-        {x: 6, y: 2, len: -2},
-        {x: 0, y: 1, len: -3},
-        {x: 29, y: 1, len: -3}
-    ],
-    stars: [
-        {x: 18, y: 8},
-        {x: 19, y: 4},
-        {x: 7, y: 3}
-    ],
-    rabbit: {x: 11, y: 8},
-};
-
-/*
-#
-@   - no
-###
-
---
-@#  +1,1
-###
-
---
--#
-@   +1,2
-###
-
---
-@-- +1,1 +1,-1
-###
-
---
-@-- +1,1 +1,-n
-##-
-###
-*/
-
-var krolobot = new Krolobot(level);
 

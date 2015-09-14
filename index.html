@@ -10,6 +10,7 @@
             text-align: center;
         }
     </style>
+    <script src="js/jquery.min.js"></script>
 </head>
 <body class="centered">
     <h1>Krolobot :)</h1>
@@ -27,5 +28,20 @@
     </div>
     <script src="./phaser.min.js"></script>
     <script src="./main.js"></script>
+    <script>
+    
+        function loadJson(url) {
+            var data = $.ajax(url, {async:false}).responseText;
+            return JSON.parse(data);
+        }
+        
+        function loadLevel(n) {
+            n = "00" + n;
+            n = n.substring(n.length - 3);
+            return loadJson('data/level' + n + '.json');
+        }
+        
+        var krolobot = new Krolobot(loadLevel(1));
+    </script>
 </body>
 </html>
