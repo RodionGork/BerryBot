@@ -1,21 +1,27 @@
 function Krolobot(data) {
     
     var sz = 20;
-    var width = 30;
-    var height = 13;
+    var width;
+    var height;
     var stepTime = 350;
     
     var level = data;
     
-    var game = new Phaser.Game(width * sz, height * sz, Phaser.AUTO, 'gamescreen',
-        { preload: preload, update: update });
+    var game = newGame(data.width, data.height);
     var objects;
     var objGroup;
     var moving;
     var movingInProgress;
     var dir;
     var setupRequest = true;
-
+    
+    function newGame(w, h) {
+        width = w;
+        height = h;
+        return new Phaser.Game(w * sz, h * sz, Phaser.AUTO, 'gamescreen',
+                { preload: preload, update: update });
+    }
+    
     function preload() {
         game.load.image('star', 'assets/berry.png');
         game.load.image('ground', 'assets/ground.png');
@@ -75,6 +81,10 @@ function Krolobot(data) {
     }
     
     this.loadLevel = function(data) {
+        if (data.width != width || data.height != height) {
+            game.destroy();
+            game = newGame(data.width, data.height);
+        }
         level = data;
         this.reset();
     }
@@ -290,6 +300,7 @@ function Krolobot(data) {
         }
         return res.sort(function(a, b) {return b - a});
     }
+    
 }
 
 
